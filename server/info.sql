@@ -121,6 +121,11 @@ CREATE TABLE users(
 INSERT INTO users(user_name) VALUES ('someone');
 
 
+--Increase the length of varchar
+
+ ALTER TABLE users ALTER user_password TYPE VARCHAR;
+
+
 
 
 
