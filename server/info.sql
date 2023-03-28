@@ -125,6 +125,40 @@ INSERT INTO users(user_name) VALUES ('someone');
 
  ALTER TABLE users ALTER user_password TYPE VARCHAR;
 
+ --
+
+SELECT id FROM emails WHERE title = $1, [user_email]
+
+
+--
+
+INSERT INTO users(user_name, user_role, user_email_id,
+       user_age,
+      user_password) VALUES('Sarvar', 'admin', '7dcdff16-f104-4626-b6c2-54f88d1add50', 24, '2020i');
+
+
+INSERT INTO emails(title) VALUES('sarvar@gmail.com');
+
+--
+
+CREATE TABLE jwt(
+     user_id VARCHAR UNIQUE NOT NULL,
+     user_name VARCHAR(50) NOT NULL,
+     user_role VARCHAR(20)  NOT NULL
+     
+);
+
+
+--
+
+ALTER TABLE users ALTER COLUMN user_role DROP NOT NULL;
+
+
+--
+
+
+
+
 
 
 
