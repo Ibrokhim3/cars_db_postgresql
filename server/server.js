@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRouter from "./cars_router/auth_router.js";
-import carsRouter from "./cars_router/cars_router.js";
+import carsRouter from "./cars_router/company_router.js";
 
 const app = express();
 dotenv.config();
