@@ -80,6 +80,7 @@ const AuthCtr = {
             user_id: foundedUser.rows[0].user_id,
             user_name: foundedUser.rows[0].user_name,
             user_role: foundedUser.rows[0].user_role,
+            company_id: foundedUser.rows[0].company_id,
           },
           process.env.SECRET_KEY,
           {
@@ -88,19 +89,20 @@ const AuthCtr = {
         );
 
         const userInfo = jwt.verify(token, process.env.SECRET_KEY);
-        const { user_id, user_name, user_role, exp, iat } = userInfo;
+        const { user_id, user_name, user_role, company_id, exp, iat } =
+          userInfo;
 
         const jwtInfo = await pool.query(`SELECT * FROM JWT`);
 
         if (!jwtInfo.rows[0]) {
           await pool.query(
-            `INSERT INTO jwt(user_id, user_name, user_role, exp, iat, token) VALUES($1, $2,$3,$4,$5, $6) `,
-            [user_id, user_name, user_role, exp, iat, token]
+            `INSERT INTO jwt(user_id, user_name, user_role, company_id, exp, iat, token) VALUES($1, $2,$3,$4,$5, $6, $7) `,
+            [user_id, user_name, user_role, company_id, exp, iat, token]
           );
         }
         await pool.query(
-          `UPDATE jwt SET user_id=$1, user_name=$2, user_role=$3, exp=$4, iat=$5, token=$6`,
-          [user_id, user_name, user_role, exp, iat, token]
+          `UPDATE jwt SET user_id=$1, user_name=$2, user_role=$3, exp=$4, iat=$5, token=$6, company_id=$7`,
+          [user_id, user_name, user_role, exp, iat, token, company_id]
         );
 
         return res.send({

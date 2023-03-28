@@ -15,6 +15,7 @@ router.post(
   companyValidMiddle,
   carsCtr.CREATE_COMPANY
 );
+router.post("/adding_company_user", carsCtr.ADD_USERS);
 router.put("/update_company/:id", carsCtr.UPDATE_COMPANY); //token va validation vatinchalik qoshilmidi
 router.delete("/delete_company/:id", carsCtr.DELETE_COMPANY);
 
