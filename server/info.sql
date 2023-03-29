@@ -156,6 +156,16 @@ ALTER TABLE users ALTER COLUMN user_role DROP NOT NULL;
 
 --
 
+ALTER TABLE company ADD UNIQUE(company_title);
+
+ALTER TABLE cars ADD UNIQUE(car_title);
+
+--
+
+
+UPDATE cars SET 
+      (car_title ='fdsfdasf', car_brand='adfadsf', car_price='adfadsf', car_color='adsfdsaf', company_id='asdfsdf' where car_id='2bfccc8a-dd09-4cc8-a80e-380e2a906624');
+
 
 
 
