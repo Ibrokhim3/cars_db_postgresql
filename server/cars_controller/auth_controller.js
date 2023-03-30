@@ -105,12 +105,36 @@ const AuthCtr = {
           [user_id, user_name, user_role, exp, iat, token, company_id]
         );
 
+        await pool.query(`INSERT INTO session(user_id) VALUES($1) `, [user_id]);
+
         return res.send({
-          msg: "You're logged in!",
+          msg: `You're logged in as a(n) ${user_role}!`,
           token,
         });
       }
       res.send("Incorrect password!");
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+  GET_USERS: async (req, res) => {
+    try {
+      const usersList = await pool.query(`SELECT * FROM users`);
+      res.status(200).send(usersList.rows);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+  GET_ONE_USER: async (req, res) => {
+    try {
+      const foundedUser = await pool.query(
+        `SELECT * FROM users WHERE user_id=$1`,
+        [req.params.id]
+      );
+      if (!foundedUser.rows[0]) {
+        return res.status(404).send("User not found!");
+      }
+      res.send(foundedUser.rows[0]);
     } catch (error) {
       return console.log(error.message);
     }
@@ -121,6 +145,7 @@ const AuthCtr = {
     // res.redirect("/");
     res.send("You're logged out");
   },
+  //userlarni o'zgartirish va o'chirish
 };
 
 export { AuthCtr };

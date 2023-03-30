@@ -186,6 +186,7 @@ const comCtr = {
       return console.log(error.message);
     }
   },
+  //userlarni o'zgartirish va qoshish ni ham qoshsa boladi
 };
 
 export { comCtr };
