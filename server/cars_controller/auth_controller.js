@@ -139,10 +139,15 @@ const AuthCtr = {
       return console.log(error.message);
     }
   },
-  LOGOUT: (req, res) => {
-    req.logout();
-    req.session = null;
-    // res.redirect("/");
+  LOGOUT: async (req, res) => {
+    const userData = await pool.query(`SELECT * FROM jwt`);
+    let { user_id } = userData.rows[0];
+
+    await pool.query(
+      `UPDATE session SET end_at=CURRENT_TIMESTAMP where user_id=$1`,
+      [user_id]
+    );
+    await pool.query(`DELETE FROM jwt WHERE user_id=$1`, [user_id]);
     res.send("You're logged out");
   },
   //userlarni o'zgartirish va o'chirish

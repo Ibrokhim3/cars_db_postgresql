@@ -114,7 +114,7 @@ CREATE TABLE users(
      session_id VARCHAR UNIQUE NOT NULL DEFAULT gen_random_uuid(),
      user_name VARCHAR NOT NULL,
      start_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
-     end_at TIMESTAMP
+     end_at TIMESTAMP(0) CURRENT_TIMESTAMP
      
 );
 

@@ -1,7 +1,8 @@
 import pool from "../config/db_config.js";
 
 const customsCtr = {
-  //update va delete qilinmadi
+  //delete qilinmadi
+  //customer da update bolmaydi
   GET_ALL_CUSTOMERS: async (req, res) => {
     const userData = await pool.query(`SELECT * FROM jwt`);
     let { user_id, user_name, user_role, company_id } = userData.rows[0];
@@ -56,6 +57,36 @@ const customsCtr = {
       [user_id, car_id, companyId.rows[0].company_id]
     );
     res.status(201).send("You're a customer!");
+  },
+
+  DELETE_CUSTOMER: async (req, res) => {
+    //delete qivotkanda admin boshqa company customer larni ochirib tashlomasligi kerak
+    const userData = await pool.query(`SELECT * FROM jwt`);
+    let { user_id, user_name, user_role, company_id } = userData.rows[0];
+    if (user_role !== "admin") {
+      return res.status(400).send("Only admins can delete customers");
+    }
+    const foundedCustomer = await pool.query(
+      `SELECT * FROM customers WHERE customer_id=$1`,
+      [req.params.id]
+    );
+    if (!foundedCustomer.rows[0]) {
+      return res.status(404).send("Customer not found!");
+    }
+
+    const deletedCustomer = await pool.query(
+      `DELETE FROM customers WHERE customer_id=$1 AND company_id=$2`,
+      [req.params.id, company_id]
+    );
+    // console.log(deletedCustomer.rows);
+    // if (!deletedCustomer.rows[0]) {
+    //   return res.status(400).send("You cannot delete this customer :(");
+    // }
+    res
+      .status(200)
+      .send(
+        `${foundedCustomer.rows[0].customer_id} was deleted successfully :)`
+      );
   },
 };
 
