@@ -52,6 +52,7 @@ const AuthCtr = {
     }
   },
   LOGIN: async (req, res) => {
+    //qaysi user id url qilish kerakmi ?
     try {
       const { user_email, user_password } = req.body;
       const foundedEmail = await pool.query(

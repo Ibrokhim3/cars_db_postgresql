@@ -32,6 +32,10 @@ CREATE TABLE emails(
      
 );
 
+ALTER TABLE emails ADD CONSTRAINT fk_company_email
+FOREIGN KEY(user_email_id) 
+	  REFERENCES emails(id);
+
 
 CREATE TABLE company(
      company_id VARCHAR UNIQUE NOT NULL DEFAULT gen_random_uuid(),
@@ -49,6 +53,10 @@ CREATE TABLE company(
 	  REFERENCES users(user_id)
      
 );
+
+-- ALTER TABLE company ADD CONSTRAINT fk_company_cr_by
+-- FOREIGN KEY(created_by) 
+-- 	  REFERENCES users(user_id);
 
 
 CREATE TABLE cars(
@@ -167,6 +175,105 @@ UPDATE cars SET
       (car_title ='fdsfdasf', car_brand='adfadsf', car_price='adfadsf', car_color='adsfdsaf', company_id='asdfsdf' where car_id='2bfccc8a-dd09-4cc8-a80e-380e2a906624');
 
 
+--
+
+ALTER TABLE company DROP CONSTRAINT fk_company_email;
+
+
+DELETE FROM users where company_id="35272cba-aaf9-4abe-848d-9aad8c6946da";
+
+
+
+
+
+
+SELECT
+	c.customer_id,
+	c.first_name customer_first_name,
+	c.last_name customer_last_name,
+	s.first_name staff_first_name,
+	s.last_name staff_last_name,
+	amount,
+	payment_date
+FROM
+	customer c
+INNER JOIN payment p 
+    ON p.customer_id = c.customer_id
+INNER JOIN staff s 
+    ON p.staff_id = s.staff_id
+ORDER BY payment_date;
+
+-- API 1
+
+-- SELECT 
+-- u.user_id,
+-- u.user_name,
+-- u.user_email_id,
+-- u.user_password,
+-- u.user_age,
+-- c.car_title,
+-- com.company_title
+-- FROM users u
+-- INNER JOIN cars c
+-- ON c.company_id = u.company_id  
+-- INNER JOIN company com
+-- ON c.company_id = com.company_id
+-- WHERE u.user_id = 'a0fd443c-92cb-4d5f-9779-829ecb106e34';
+
+
+
+
+
+-- API 2 ishladi
+
+SELECT
+u.user_id,
+u.user_name,
+u.user_role,
+u.user_age,
+u.user_password,
+u.user_email_id,
+s.start_at,
+s.end_at
+FROM session s
+JOIN users u 
+ON u.user_id = s.user_id
+WHERE s.user_id = $1
+
+--API 3 ishladi
+
+
+SELECT 
+*
+FROM 
+users
+WHERE company_id = '5708b5d7-e39e-44fd-8a71-af2dc723d4aa';
+
+-- API 4 ishladi
+
+SELECT * 
+FROM cars
+WHERE company_id = '5708b5d7-e39e-44fd-8a71-af2dc723d4aa';
+
+-- API 5  ishladi
+
+SELECT
+c.*,
+e.title
+FROM company c
+JOIN emails e
+ON c.company_email_id = e.id
+WHERE c.company_email_id = 'f8c89f29-6d82-48f3-bb1c-2c5453100328';
+
+-- API 6 ishladi
+
+SELECT 
+c.car_title,
+com.company_title
+FROM cars c
+JOIN company com
+ON c.company_id = com.company_id
+WHERE c.car_id = '264380af-f588-4323-81d1-c028b71e5dde';
 
 
 

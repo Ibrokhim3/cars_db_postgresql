@@ -29,6 +29,7 @@ const comCtr = {
   //user role qoshilmagan
 
   CREATE_COMPANY: async (req, res) => {
+    //delete xali ishlamadi
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
       let { user_id, user_name, user_role, company_id } = userData.rows[0];
@@ -36,13 +37,24 @@ const comCtr = {
         return res.status(400).send("Only admins can add company!");
       }
       const { company_title, company_address, company_email } = req.body;
+
       const foundedeCompany = await pool.query(
         `SELECT * FROM emails where title = $1 `,
         [company_email]
       );
+
+      const foundedeCompanyUser = await pool.query(
+        `SELECT * FROM company where created_by = $1 `,
+        [user_id]
+      );
+
+      if (foundedeCompanyUser.rows[0]) {
+        return res.status(400).send("Only one company can be added ): !");
+      }
       if (foundedeCompany.rows[0]) {
         return res.send("Company already exists!");
       }
+
       await pool.query(`INSERT INTO emails(title) VALUES($1)`, [company_email]);
 
       let emailId = await pool.query(`SELECT id FROM emails where title=$1`, [
@@ -61,6 +73,11 @@ const comCtr = {
         `SELECT company_id FROM company where company_email_id=$1`,
         [emailId.rows[0].id]
       );
+
+      await pool.query(`UPDATE jwt SET company_id=$1 where user_id=$2`, [
+        companyId.rows[0].company_id,
+        user_id,
+      ]);
 
       await pool.query(`UPDATE users SET company_id=$1 where user_id=$2`, [
         companyId.rows[0].company_id,
@@ -116,6 +133,7 @@ const comCtr = {
   DELETE_COMPANY: async (req, res) => {
     //cars va users ochib ketish kerak
     // on drop cascade ishlatish
+    //delete ishlamoqda lekin chala
     const userData = await pool.query(`SELECT * FROM jwt`);
     let { user_id, user_name, user_role, company_id } = userData.rows[0];
     if (user_role !== "admin") {
@@ -129,19 +147,37 @@ const comCtr = {
       return res.status(404).send("Company not found!");
     }
 
-    // await pool.query(`UPDATE users SET company_id=$1 where user_id=$2`, [
-    //   "",
-    //   user_id,
-    // ]);
+    await pool.query(`DELETE FROM customers where company_id=$1`, [
+      foundedCompany.rows[0].company_id,
+    ]);
+
+    await pool.query(`DELETE FROM cars where company_id=$1`, [
+      foundedCompany.rows[0].company_id,
+    ]);
+
+    await pool.query(`UPDATE users SET company_id=null where company_id=$1`, [
+      foundedCompany.rows[0].company_id,
+    ]);
+
+    await pool.query(
+      `DELETE FROM users where company_id=$1 AND user_role='company_user'`,
+      [foundedCompany.rows[0].company_id]
+    );
 
     await pool.query(`DELETE FROM company where company_id=$1`, [
       foundedCompany.rows[0].company_id,
     ]);
+
+    // await pool;
+
+    // await pool.query(`UPDATE users SET company_id="" where `, [foundedCompany.rows[0].company_id])
+
     res
       .status(200)
       .send(`${foundedCompany.rows[0].company_title} was deleted successfully`);
   },
   ADD_USERS: async (req, res) => {
+    //userlarni update va delete qilish get qilish ?
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
       const {
@@ -175,9 +211,16 @@ const comCtr = {
       await pool.query(
         `INSERT INTO users(user_name, 
           user_email_id, user_age,
-          user_password, company_id) VALUES($1,
-            $2, $3, $4, $5)`,
-        [user_name, emailId.rows[0].id, user_age, hashPsw, company_id_jwt]
+          user_password, company_id, user_role) VALUES($1,
+            $2, $3, $4, $5, $6)`,
+        [
+          user_name,
+          emailId.rows[0].id,
+          user_age,
+          hashPsw,
+          company_id_jwt,
+          "company_user",
+        ]
       );
       return res
         .status(201)

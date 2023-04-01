@@ -111,20 +111,23 @@ const carsCtr = {
     if (user_role !== "admin") {
       return res.status(400).send("Only admins can delete car");
     }
-    const foundedCompany = await pool.query(
-      `SELECT * FROM cars WHERE car_id=$1`,
-      [req.params.id]
-    );
-    if (!foundedCompany.rows[0]) {
+    const foundedCar = await pool.query(`SELECT * FROM cars WHERE car_id=$1`, [
+      req.params.id,
+    ]);
+    if (!foundedCar.rows[0]) {
       return res.status(404).send("Car not found!");
     }
 
+    await pool.query(`DELETE FROM customers WHERE car_id=$1`, [
+      foundedCar.rows[0].car_id,
+    ]);
+
     await pool.query(`DELETE FROM cars where car_id=$1`, [
-      foundedCompany.rows[0].car_id,
+      foundedCar.rows[0].car_id,
     ]);
     res
       .status(200)
-      .send(`${foundedCompany.rows[0].car_title} was deleted successfully`);
+      .send(`${foundedCar.rows[0].car_title} was deleted successfully`);
   },
 };
 

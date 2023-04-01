@@ -44,6 +44,10 @@ const customsCtr = {
       [car_id]
     );
 
+    if (!companyId.rows[0]) {
+      return res.status(400).send("The car was not found!");
+    }
+
     const foundedeCustomer = await pool.query(
       `SELECT * FROM customers where user_id = $1`,
       [user_id]
@@ -52,6 +56,7 @@ const customsCtr = {
     if (foundedeCustomer.rows[0]) {
       return res.status(400).send("You can buy only one car");
     }
+
     await pool.query(
       `INSERT INTO customers(user_id, car_id, company_id) VALUES($1,$2,$3)`,
       [user_id, car_id, companyId.rows[0].company_id]
