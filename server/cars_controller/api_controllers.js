@@ -1,16 +1,18 @@
 import pool from "../config/db_config.js";
 
 const userData = await pool.query(`SELECT * FROM jwt`);
-const { user_id, user_name, user_role, company_id } = userData.rows[0];
+if (userData.rows[0]) {
+  const { user_id, user_name, user_role, company_id } = userData.rows[0];
+}
 
 const apiCtr = {
   //ishladi
   GET_SESSION_INFO: async (req, res) => {
-    if (user_role === "user") {
-      return res
-        .status(400)
-        .send("Only admins can see the information about company");
-    }
+    // if (user_role === "user") {
+    //   return res
+    //     .status(400)
+    //     .send("Only admins can see the information about user");
+    // }
     const sessionInfo = await pool.query(
       `SELECT
     u.*,
@@ -30,11 +32,11 @@ const apiCtr = {
     res.send(sessionInfo.rows);
   },
   GET_USER_INFO_BY_COMPANY: async (req, res) => {
-    if (user_role === "user") {
-      return res
-        .status(400)
-        .send("Only admins can see the information about company");
-    }
+    // if (user_role === "user") {
+    //   return res
+    //     .status(400)
+    //     .send("Only admins can see the information about company");
+    // }
     const userInfo = await pool.query(
       `SELECT 
     *
@@ -52,11 +54,11 @@ const apiCtr = {
     res.send(userInfo.rows);
   },
   GET_CAR_INFO: async (req, res) => {
-    if (user_role === "user") {
-      return res
-        .status(400)
-        .send("Only admins can see the information about company");
-    }
+    // if (user_role === "user") {
+    //   return res
+    //     .status(400)
+    //     .send("Only admins can see the information about car");
+    // }
     const carInfo = await pool.query(
       `SELECT 
     *
@@ -68,17 +70,17 @@ const apiCtr = {
     if (!carInfo.rows[0]) {
       return res
         .status(400)
-        .send("There is no information related to this company");
+        .send("There is no information related to this car");
     }
 
     res.send(carInfo.rows);
   },
   GET_EMAIL_INFO: async (req, res) => {
-    if (user_role === "user") {
-      return res
-        .status(400)
-        .send("Only admins can see the information about company");
-    }
+    // if (user_role === "user") {
+    //   return res
+    //     .status(400)
+    //     .send("Only admins can see the information about email");
+    // }
     const emailInfo = await pool.query(
       `SELECT
       c.*,
@@ -92,17 +94,17 @@ const apiCtr = {
     if (!emailInfo.rows[0]) {
       return res
         .status(400)
-        .send("There is no information related to this company");
+        .send("There is no information related to this email");
     }
 
     res.send(emailInfo.rows);
   },
   GET_CAR_TITLE: async (req, res) => {
-    if (user_role === "user") {
-      return res
-        .status(400)
-        .send("Only admins can see the information about company");
-    }
+    // if (user_role === "user") {
+    //   return res
+    //     .status(400)
+    //     .send("Only admins can see the information about car");
+    // }
     const carInfo = await pool.query(
       `SELECT 
       c.car_title,
@@ -117,18 +119,40 @@ const apiCtr = {
     if (!carInfo.rows[0]) {
       return res
         .status(400)
-        .send("There is no information related to this company");
+        .send("There is no information related to this car");
     }
 
     res.send(carInfo.rows);
   },
+  GET_CUSTOMER_INFO: async (req, res) => {
+    // if (user_role === "user") {
+    //   return res
+    //     .status(400)
+    //     .send("Only admins can see the information about customer");
+    // }
+    const custInfo = await pool.query(
+      `
+      SELECT 
+      u.*,
+      c.car_title,
+      com.company_title
+      FROM users u
+      INNER JOIN cars c
+      ON c.company_id = u.company_id  
+      INNER JOIN company com
+      ON c.company_id = com.company_id
+      WHERE u.user_id = $1
+      `,
+      [req.params.id]
+    );
+    if (!custInfo.rows[0]) {
+      return res
+        .status(400)
+        .send("There is no information related to this customer");
+    }
 
-
-  // GET_CUSTOMERS_INFO: async (req, res) => {
-  //   await pool.query(
-  //     `SELECT * FROM users u where user_id=$1 INNER JOIN cars c ON customers.car_id = c.car_id INNER JOIN company co ON  `
-  //   );
-  // },
+    res.send(custInfo.rows);
+  },
 };
 
 export { apiCtr };

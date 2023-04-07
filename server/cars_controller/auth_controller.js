@@ -5,7 +5,6 @@ import pool from "../config/db_config.js";
 
 const AuthCtr = {
   //trim was not work
-  //jwt file
   REGISTER: async (req, res) => {
     try {
       const { user_name, user_email, user_password, user_age, user_role } =
@@ -118,38 +117,23 @@ const AuthCtr = {
       return console.log(error.message);
     }
   },
-  GET_USERS: async (req, res) => {
-    try {
-      const usersList = await pool.query(`SELECT * FROM users`);
-      res.status(200).send(usersList.rows);
-    } catch (error) {
-      return console.log(error.message);
-    }
-  },
-  GET_ONE_USER: async (req, res) => {
-    try {
-      const foundedUser = await pool.query(
-        `SELECT * FROM users WHERE user_id=$1`,
-        [req.params.id]
-      );
-      if (!foundedUser.rows[0]) {
-        return res.status(404).send("User not found!");
-      }
-      res.send(foundedUser.rows[0]);
-    } catch (error) {
-      return console.log(error.message);
-    }
-  },
   LOGOUT: async (req, res) => {
-    const userData = await pool.query(`SELECT * FROM jwt`);
-    let { user_id } = userData.rows[0];
+    try {
+      const userData = await pool.query(`SELECT * FROM jwt`);
+      let { user_id } = userData.rows[0];
+      if (!userData.rows[0]) {
+        return res.status(400).send("You're already logged out");
+      }
 
-    await pool.query(
-      `UPDATE session SET end_at=CURRENT_TIMESTAMP where user_id=$1`,
-      [user_id]
-    );
-    await pool.query(`DELETE FROM jwt WHERE user_id=$1`, [user_id]);
-    res.send("You're logged out");
+      await pool.query(
+        `UPDATE session SET end_at=CURRENT_TIMESTAMP where user_id=$1`,
+        [user_id]
+      );
+      await pool.query(`DELETE FROM jwt WHERE user_id=$1`, [user_id]);
+      res.send("You're logged out");
+    } catch (error) {
+      return console.log(error.message);
+    }
   },
   //userlarni o'zgartirish va o'chirish
 };

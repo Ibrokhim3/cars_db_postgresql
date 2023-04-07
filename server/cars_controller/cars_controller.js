@@ -1,8 +1,6 @@
 import pool from "../config/db_config.js";
 
 const carsCtr = {
-  //token va validation vaqtinchalik qoshilmaydi
-
   GET_CARS: async (req, res) => {
     try {
       const carsList = await pool.query(`SELECT * FROM cars`);
@@ -105,29 +103,70 @@ const carsCtr = {
     }
   },
   DELETE_CAR: async (req, res) => {
-    // on drop cascade ishlatish
-    const userData = await pool.query(`SELECT * FROM jwt`);
-    let { user_id, user_name, user_role, company_id } = userData.rows[0];
-    if (user_role !== "admin") {
-      return res.status(400).send("Only admins can delete car");
-    }
-    const foundedCar = await pool.query(`SELECT * FROM cars WHERE car_id=$1`, [
-      req.params.id,
-    ]);
-    if (!foundedCar.rows[0]) {
-      return res.status(404).send("Car not found!");
-    }
+    try {
+      const userData = await pool.query(`SELECT * FROM jwt`);
+      let { user_id, user_name, user_role, company_id } = userData.rows[0];
+      if (user_role !== "admin") {
+        return res.status(400).send("Only admins can delete car");
+      }
+      const foundedCar = await pool.query(
+        `SELECT * FROM cars WHERE car_id=$1`,
+        [req.params.id]
+      );
+      if (!foundedCar.rows[0]) {
+        return res.status(404).send("Car not found!");
+      }
 
-    await pool.query(`DELETE FROM customers WHERE car_id=$1`, [
-      foundedCar.rows[0].car_id,
-    ]);
+      await pool.query(`DELETE FROM customers WHERE car_id=$1`, [
+        foundedCar.rows[0].car_id,
+      ]);
 
-    await pool.query(`DELETE FROM cars where car_id=$1`, [
-      foundedCar.rows[0].car_id,
-    ]);
-    res
-      .status(200)
-      .send(`${foundedCar.rows[0].car_title} was deleted successfully`);
+      await pool.query(`DELETE FROM cars where car_id=$1`, [
+        foundedCar.rows[0].car_id,
+      ]);
+      res
+        .status(200)
+        .send(`${foundedCar.rows[0].car_title} was deleted successfully`);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+  DELETE_CAR_BOOL: async (req, res) => {
+    try {
+      const userData = await pool.query(`SELECT * FROM jwt`);
+      const {
+        user_id: user_id_jwt,
+        user_name: user_name_jwt,
+        user_role: user_role_jwt,
+        company_id: company_id_jwt,
+      } = userData.rows[0];
+
+      if (user_role_jwt !== "admin") {
+        return res.status(400).send("Only admins can remove cars");
+      }
+
+      const foundedCar = await pool.query(
+        `SELECT * FROM cars WHERE car_id=$1`,
+        [req.params.id]
+      );
+
+      if (!foundedCar.rows[0]) {
+        return res.status(404).send("Car not found!");
+      }
+
+      if (company_id_jwt !== foundedCar.rows[0].company_id) {
+        return res
+          .status(404)
+          .send("You are not permitted to delete this car!");
+      }
+
+      await pool.query(`UPDATE cars SET isDeleted=true where car_id=$1`, [
+        req.params.id,
+      ]);
+      res.status(200).send(`Car was deleted successfully by ${user_name_jwt}`);
+    } catch (error) {
+      return console.log(error.message);
+    }
   },
 };
 

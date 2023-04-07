@@ -184,8 +184,7 @@ DELETE FROM users where company_id="35272cba-aaf9-4abe-848d-9aad8c6946da";
 
 
 
-
-
+--APIS
 
 SELECT
 	c.customer_id,
@@ -203,22 +202,18 @@ INNER JOIN staff s
     ON p.staff_id = s.staff_id
 ORDER BY payment_date;
 
--- API 1
+-- API 1 
 
--- SELECT 
--- u.user_id,
--- u.user_name,
--- u.user_email_id,
--- u.user_password,
--- u.user_age,
--- c.car_title,
--- com.company_title
--- FROM users u
--- INNER JOIN cars c
--- ON c.company_id = u.company_id  
--- INNER JOIN company com
--- ON c.company_id = com.company_id
--- WHERE u.user_id = 'a0fd443c-92cb-4d5f-9779-829ecb106e34';
+SELECT 
+u.*,
+c.car_title,
+com.company_title
+FROM cars c
+INNER JOIN company com
+ON c.company_id = com.company_id  
+INNER JOIN users u
+ON u.company_id = com.company_id
+WHERE u.user_id = 'ed2aef7d-2bb4-4087-97ce-732ac9158ca9';
 
 
 
