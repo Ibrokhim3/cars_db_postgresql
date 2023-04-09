@@ -66,7 +66,6 @@ const carsCtr = {
         return res.status(400).send("Only admins can update the cars!");
       }
 
-      let { car_title, car_brand, car_price, car_color } = req.body;
       const foundedCar = await pool.query(
         `SELECT * FROM cars WHERE car_id=$1`,
         [req.params.id]
@@ -75,6 +74,13 @@ const carsCtr = {
       if (!foundedCar.rows[0]) {
         return res.status(404).send("Car not found!");
       }
+
+      if (company_id !== foundedCar.rows[0].company_id) {
+        return res
+          .status(404)
+          .send("You are not permitted to update this car!");
+      }
+      let { car_title, car_brand, car_price, car_color } = req.body;
 
       const {
         car_title: c_title,

@@ -135,6 +135,33 @@ const AuthCtr = {
       return console.log(error.message);
     }
   },
+  
+  GET_USERS: async (req, res) => {
+    try {
+      const usersList = await pool.query(`SELECT * FROM users`);
+      if (!usersList.rows[0]) {
+        return res.status(404).send("Users not found");
+      }
+      res.status(200).send(usersList.rows);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+  GET_ONE_USER: async (req, res) => {
+    try {
+        const foundedUser = await pool.query(
+        `SELECT * FROM users WHERE user_id=$1`,
+        [req.params.id]
+      );
+      if (!foundedUser.rows[0]) {
+        return res.status(404).send("User not found!");
+      }
+      res.send(foundedUser.rows[0]);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+
   //userlarni o'zgartirish va o'chirish
 };
 

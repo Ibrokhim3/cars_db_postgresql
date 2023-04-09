@@ -113,15 +113,19 @@ const comCtr = {
       }
 
       let { company_title, company_address, company_email } = req.body;
-      const {
-        company_title: com_title,
-        company_address: com_address,
-        company_email: com_email,
-      } = foundedCompany.rows[0];
+      const { company_title: com_title, company_address: com_address } =
+        foundedCompany.rows[0];
+
+      const foundedEmail = await pool.query(
+        `SELECT * from emails where id=$1`,
+        [foundedCompany.rows[0].company_email_id]
+      );
 
       (company_title = company_title ? company_title : com_title),
         (company_address = company_address ? company_address : com_address),
-        (company_email = company_email ? company_email : com_email);
+        (company_email = company_email
+          ? company_email
+          : foundedEmail.rows[0].title);
 
       const emailId = foundedCompany.rows[0].company_email_id;
 
@@ -233,7 +237,7 @@ const comCtr = {
       const userData = await pool.query(`SELECT * FROM jwt`);
       let { user_id, user_name, user_role, company_id } = userData.rows[0];
       if (user_role !== "admin") {
-        return res.status(400).send("Only admins can delete company");
+        return res.status(400).send("Only admins can see users list");
       }
 
       const usersList = await pool.query(
@@ -324,6 +328,67 @@ const comCtr = {
       return res
         .status(201)
         .send(`${user_name} was added successfully by ${user_name_jwt}!`);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+  UPDATE_USER: async (req, res) => {
+    try {
+      const userData = await pool.query(`SELECT * FROM jwt`);
+      let {
+        user_id,
+        user_name: user_n,
+        user_role,
+        company_id,
+      } = userData.rows[0];
+      if (user_role !== "admin") {
+        return res.status(400).send("Only admins can update users");
+      }
+
+      const foundedUser = await pool.query(
+        `SELECT * FROM users WHERE user_id=$1`,
+        [req.params.id]
+      );
+
+      if (!foundedUser.rows[0]) {
+        return res.status(404).send("User not found!");
+      }
+      if (company_id !== foundedUser.rows[0].company_id) {
+        return res
+          .status(400)
+          .send("You do not have permission to update this user");
+      }
+
+      let { user_name, user_age, user_email, user_password } = req.body;
+
+      const foundedEmail = await pool.query(
+        `SELECT * from emails where id=$1`,
+        [foundedUser.rows[0].user_email_id]
+      );
+
+      const {
+        user_name: user_name_user,
+        user_age: user_a,
+        user_password: user_p,
+      } = foundedUser.rows[0];
+
+      const hashUserPsw = await bcrypt.hash(user_password, 12);
+
+      (user_name = user_name ? user_name : user_name_user),
+        (user_age = user_age ? user_age : user_a),
+        (user_password = user_password ? hashUserPsw : user_p),
+        (user_email = user_email ? user_email : foundedEmail.rows[0].title);
+
+      await pool.query(`UPDATE emails SET title=$1 where id=$2`, [
+        user_email,
+        foundedUser.rows[0].user_email_id,
+      ]);
+
+      await pool.query(
+        `UPDATE users SET user_name=$1, user_age=$2, user_password=$3 where user_id=$4`,
+        [user_name, user_age, user_password, req.params.id]
+      );
+      res.status(200).send(`Company user updated successfully by ${user_n}!`);
     } catch (error) {
       return console.log(error.message);
     }

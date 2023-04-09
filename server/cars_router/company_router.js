@@ -14,12 +14,7 @@ router.post(
   companyValidMiddle,
   comCtr.CREATE_COMPANY
 );
-router.post(
-  "/adding_company_user",
-  verifyToken,
-  userValidateMiddle,
-  comCtr.ADD_USERS
-);
+
 router.put(
   "/update_company/:id",
   verifyToken,
@@ -33,8 +28,20 @@ router.delete(
 );
 router.delete("/delete_company/:id", verifyToken, comCtr.DELETE_COMPANY);
 
+router.post(
+  "/adding_company_user",
+  verifyToken,
+  userValidateMiddle,
+  comCtr.ADD_USERS
+);
 router.get("/get_company_users", verifyToken, comCtr.GET_USERS);
 router.get("/get_one_company_user/:id", verifyToken, comCtr.GET_ONE_USER);
+router.put(
+  "/update_company_user/:id",
+  userValidateMiddle,
+  verifyToken,
+  comCtr.UPDATE_USER
+);
 router.delete("/delete_user_bool/:id", verifyToken, comCtr.DELETE_USER_BOOL);
 
 export default router;

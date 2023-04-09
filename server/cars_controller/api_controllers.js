@@ -6,7 +6,6 @@ if (userData.rows[0]) {
 }
 
 const apiCtr = {
-  //ishladi
   GET_SESSION_INFO: async (req, res) => {
     // if (user_role === "user") {
     //   return res
@@ -130,6 +129,11 @@ const apiCtr = {
     //     .status(400)
     //     .send("Only admins can see the information about customer");
     // }
+
+    const smt = await pool.query(`SELECT * FROM customers where user_id=$1`, [
+      req.params.id,
+    ]);
+
     const custInfo = await pool.query(
       `
       SELECT 
@@ -138,12 +142,12 @@ const apiCtr = {
       com.company_title
       FROM users u
       INNER JOIN cars c
-      ON c.company_id = u.company_id  
+      ON c.car_id = $1    
       INNER JOIN company com
       ON c.company_id = com.company_id
-      WHERE u.user_id = $1
+      WHERE u.user_id = $2
       `,
-      [req.params.id]
+      [smt.rows[0].car_id, req.params.id]
     );
     if (!custInfo.rows[0]) {
       return res
