@@ -4,7 +4,9 @@ import pool from "../config/db_config.js";
 const comCtr = {
   GET_COMPANY: async (req, res) => {
     try {
-      const companiesList = await pool.query(`SELECT * FROM company`);
+      const companiesList = await pool.query(
+        `SELECT * FROM company where isDeleted='false'`
+      );
       res.status(200).send(companiesList.rows);
     } catch (error) {
       return console.log(error.message);
@@ -13,7 +15,7 @@ const comCtr = {
   GET_ONE_COMPANY: async (req, res) => {
     try {
       const foundedCompany = await pool.query(
-        `SELECT * FROM company WHERE company_id=$1`,
+        `SELECT * FROM company WHERE company_id=$1 AND isDeleted='false'`,
         [req.params.id]
       );
       if (!foundedCompany.rows[0]) {
@@ -24,10 +26,22 @@ const comCtr = {
       return console.log(error.message);
     }
   },
-  //company_id in users
-  //email_id now cannot be changed
-  //user role qoshilmagan
-
+  GET_COMPANY_BY_ADMIN: async (req, res) => {
+    try {
+      const userData = await pool.query(`SELECT * FROM jwt`);
+      let { user_id, user_name, user_role, company_id } = userData.rows[0];
+      const foundedCompany = await pool.query(
+        `SELECT * FROM company WHERE company_id=$1 and isDeleted='false'`,
+        [company_id]
+      );
+      if (!foundedCompany.rows[0]) {
+        return res.status(404).send("Company not found!");
+      }
+      res.send(foundedCompany.rows[0]);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
   CREATE_COMPANY: async (req, res) => {
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
@@ -144,9 +158,6 @@ const comCtr = {
     }
   },
   DELETE_COMPANY: async (req, res) => {
-    //cars va users ochib ketish kerak
-    // on drop cascade ishlatish
-    //delete ishlamoqda lekin chala
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
       let { user_id, user_name, user_role, company_id } = userData.rows[0];
@@ -159,6 +170,12 @@ const comCtr = {
       );
       if (!foundedCompany.rows[0]) {
         return res.status(404).send("Company not found!");
+      }
+
+      if (company_id !== req.params.id) {
+        return res
+          .status(400)
+          .send("You do not have permission to delete this company");
       }
 
       await pool.query(`DELETE FROM customers where company_id=$1`, [
@@ -214,6 +231,12 @@ const comCtr = {
         return res.status(404).send("Company not found!");
       }
 
+      if (company_id_jwt !== req.params.id) {
+        return res
+          .status(400)
+          .send("You do not have permission to delete this company");
+      }
+
       await pool.query(
         `UPDATE company SET isDeleted=true where company_id=$1`,
         [company_id_jwt]
@@ -241,10 +264,9 @@ const comCtr = {
       }
 
       const usersList = await pool.query(
-        `SELECT * FROM users where company_id=$1 and user_role='company_user'`,
+        `SELECT * FROM users where company_id=$1 and user_role='company_user' and isDeleted='false'`,
         [company_id]
       );
-      //shu yerda company_user bolish kerak
       if (!usersList.rows[0]) {
         return res.status(404).send("Users not found");
       }
@@ -262,7 +284,7 @@ const comCtr = {
       }
 
       const foundedUser = await pool.query(
-        `SELECT * FROM users WHERE user_id=$1 AND company_id=$2`,
+        `SELECT * FROM users WHERE user_id=$1 AND company_id=$2 AND isDeleted='false'`,
         [req.params.id, company_id]
       );
       if (!foundedUser.rows[0]) {
@@ -274,7 +296,6 @@ const comCtr = {
     }
   },
   ADD_USERS: async (req, res) => {
-    //userlarni update va delete qilish get qilish ?
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
       const {
@@ -416,6 +437,12 @@ const comCtr = {
         return res.status(404).send("User not found!");
       }
 
+      if (company_id_jwt !== foundedUser.rows[0].company_id) {
+        return res
+          .status(400)
+          .send("You do not have permission to delete this user");
+      }
+
       await pool.query(`UPDATE users SET isDeleted=true where user_id=$1`, [
         req.params.id,
       ]);
@@ -426,7 +453,6 @@ const comCtr = {
       return console.log(error.message);
     }
   },
-  //userlarni o'zgartirish ham qoshsa boladi
 };
 
 export { comCtr };

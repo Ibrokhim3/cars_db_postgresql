@@ -1,8 +1,6 @@
 import pool from "../config/db_config.js";
 
 const customsCtr = {
-  //delete qilinmadi
-  //customer da update bolmaydi
   GET_ALL_CUSTOMERS: async (req, res) => {
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
@@ -14,15 +12,18 @@ const customsCtr = {
           .send("Only admins can see the list of customers!");
       }
       const customersList = await pool.query(
-        `SELECT * FROM customers where company_id=$1`,
+        `SELECT * FROM customers where company_id=$1 and isDeleted='false'`,
         [company_id]
       );
+      if (!customersList) {
+        return res.status(404).send("There are no customers yet!");
+      }
       res.status(200).send(customersList.rows);
     } catch (error) {
       return console.log(error.message);
     }
   },
-  GET_ONE_CUTOMER: async (req, res) => {
+  GET_ONE_CUSTOMER: async (req, res) => {
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
       let { user_id, user_name, user_role, company_id } = userData.rows[0];
@@ -33,7 +34,7 @@ const customsCtr = {
           .send("Only admins can see the list of customers!");
       }
       const foundedCustomer = await pool.query(
-        `SELECT * FROM customers WHERE company_id=$1 AND customer_id=$2`,
+        `SELECT * FROM customers WHERE company_id=$1 AND customer_id=$2 AND isDeleted='false'`,
         [company_id, req.params.id]
       );
       if (!foundedCustomer.rows[0]) {
@@ -85,7 +86,6 @@ const customsCtr = {
   },
 
   DELETE_CUSTOMER: async (req, res) => {
-    //delete qivotkanda admin boshqa company customer larni ochirib tashlomasligi kerak
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
       let { user_id, user_name, user_role, company_id } = userData.rows[0];
@@ -98,6 +98,12 @@ const customsCtr = {
       );
       if (!foundedCustomer.rows[0]) {
         return res.status(404).send("Customer not found!");
+      }
+
+      if (company_id !== foundedCustomer.rows[0].company_id) {
+        return res
+          .status(404)
+          .send("You are not permitted to delete this customer!");
       }
 
       await pool.query(`DELETE FROM customers where customer_id=$1`, [

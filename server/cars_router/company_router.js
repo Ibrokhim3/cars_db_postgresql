@@ -8,6 +8,7 @@ const router = Router();
 
 router.get("/companies_list", comCtr.GET_COMPANY);
 router.get("/single_company/:id", comCtr.GET_ONE_COMPANY);
+router.get("/company_by_admin", verifyToken, comCtr.GET_COMPANY_BY_ADMIN);
 router.post(
   "/adding_company",
   verifyToken,

@@ -3,7 +3,12 @@ import pool from "../config/db_config.js";
 const carsCtr = {
   GET_CARS: async (req, res) => {
     try {
-      const carsList = await pool.query(`SELECT * FROM cars`);
+      const carsList = await pool.query(
+        `SELECT * FROM cars where isDeleted='false'`
+      );
+      if (!carsList.rows[0]) {
+        return res.status(404).send("There are no cars yet");
+      }
       res.status(200).send(carsList.rows);
     } catch (error) {
       return console.log(error.message);
@@ -12,7 +17,7 @@ const carsCtr = {
   GET_ONE_CAR: async (req, res) => {
     try {
       const foundedCar = await pool.query(
-        `SELECT * FROM cars WHERE car_id=$1`,
+        `SELECT * FROM cars WHERE car_id=$1 and isDeleted='false'`,
         [req.params.id]
       );
       if (!foundedCar.rows[0]) {
@@ -23,10 +28,51 @@ const carsCtr = {
       return console.log(error.message);
     }
   },
+  GET_CARS_BY_ADMIN: async (req, res) => {
+    try {
+      const userData = await pool.query(`SELECT * FROM jwt`);
+      const { user_id, user_name, user_role, company_id } = userData.rows[0];
+
+      const foundedCars = await pool.query(
+        `SELECT * FROM cars where company_id=$1 and isDeleted='false'`,
+        [company_id]
+      );
+      if (!foundedCars.rows[0]) {
+        return res.status(404).send("Car not found!");
+      }
+      res.send(foundedCars.rows);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+  GET_ONE_CAR_BY_ADMIN: async (req, res) => {
+    try {
+      const userData = await pool.query(`SELECT * FROM jwt`);
+      const { user_id, user_name, user_role, company_id } = userData.rows[0];
+
+      const foundedCar = await pool.query(
+        `SELECT * FROM cars where company_id=$1 and car_id=$2 and isDeleted='false'`,
+        [company_id, req.params.id]
+      );
+      if (!foundedCar.rows[0]) {
+        return res.status(404).send("Car not found!");
+      }
+      res.send(foundedCar.rows[0]);
+    } catch (error) {
+      return console.log(error.message);
+    }
+  },
+
   CREATE_CAR: async (req, res) => {
     try {
       const userData = await pool.query(`SELECT * FROM jwt`);
       const { user_id, user_name, user_role, company_id } = userData.rows[0];
+
+      if (!company_id) {
+        return res
+          .status(400)
+          .send("Company cars can be added after company creation");
+      }
 
       if (user_role !== "admin") {
         return res.status(400).send("Only admins can add car!");
@@ -121,6 +167,12 @@ const carsCtr = {
       );
       if (!foundedCar.rows[0]) {
         return res.status(404).send("Car not found!");
+      }
+
+      if (company_id !== foundedCar.rows[0].company_id) {
+        return res
+          .status(404)
+          .send("You are not permitted to delete this car!");
       }
 
       await pool.query(`DELETE FROM customers WHERE car_id=$1`, [
